@@ -18,10 +18,9 @@
 // No API key needed in client-side code!
 // Set your OPENAI_API_KEY in Netlify dashboard: Site settings > Environment variables
 
-// IMPORTANT: Replace with your Retell AI credentials
-// Get these from your Retell AI dashboard
-const AGENT_ID = "YOUR_RETELL_AGENT_ID"; // << INSERT YOUR RETELL AGENT ID
-const BACKEND_WEBSOCKET_URL = "ws://demo.yourserver.com/retell-connection"; // << INSERT YOUR BACKEND WEBSOCKET URL
+// NOTE: Retell AI credentials are now stored securely in Netlify environment variables
+// RETELL_API_KEY and RETELL_AGENT_ID are set in Netlify dashboard
+// The serverless function handles all secure API calls
 
 // ===================================
 // MOBILE MENU TOGGLE
@@ -422,16 +421,16 @@ const micIcon = document.getElementById('micIcon');
 const transcriptArea = document.getElementById('transcriptArea');
 const transcript = document.getElementById('transcript');
 
-// WebSocket connection variable
-let retellWebSocket = null;
+// Retell Web Client instance
+let retellWebClient = null;
 
-// Audio stream variable
-let audioStream = null;
+// Call status tracking
+let isCallActive = false;
 
 // Event listener for "Connect to AI Agent" button
 connectRetellBtn.addEventListener('click', async () => {
     // Check if already connected
-    if (retellWebSocket && retellWebSocket.readyState === WebSocket.OPEN) {
+    if (isCallActive) {
         // Disconnect
         disconnectRetellAgent();
     } else {
@@ -441,83 +440,102 @@ connectRetellBtn.addEventListener('click', async () => {
 });
 
 /**
- * Connect to the Retell AI voice agent
+ * Connect to the Retell AI voice agent using Retell Web SDK
  */
 async function connectRetellAgent() {
-    // Check if configuration is set
-    if (AGENT_ID === "YOUR_RETELL_AGENT_ID" || BACKEND_WEBSOCKET_URL === "ws://demo.yourserver.com/retell-connection") {
-        alert('Retell AI configuration not set. Please update AGENT_ID and BACKEND_WEBSOCKET_URL in script.js to use this feature.');
-        return;
-    }
-    
     try {
         // Update UI to "Connecting" state
-        updateConnectionStatus('connecting', 'Connecting...');
+        updateConnectionStatus('connecting', 'Requesting microphone...');
         connectRetellBtn.textContent = 'Connecting...';
         connectRetellBtn.disabled = true;
         
-        // Request microphone access
-        try {
-            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        } catch (error) {
-            console.error('Microphone access denied:', error);
-            alert('Microphone access is required for voice interaction. Please allow microphone access and try again.');
+        // Check if Retell Web Client SDK is loaded
+        if (typeof RetellWebClient === 'undefined') {
+            console.error('Retell Web SDK not loaded');
+            alert('Voice agent SDK not loaded. Please refresh the page and try again.');
             updateConnectionStatus('disconnected', 'Disconnected');
             connectRetellBtn.textContent = 'Connect to AI Agent';
             connectRetellBtn.disabled = false;
             return;
         }
         
-        // Establish WebSocket connection to backend
-        // Note: Your backend should handle the actual Retell API authentication
-        retellWebSocket = new WebSocket(BACKEND_WEBSOCKET_URL);
+        // Call our serverless function to create a web call session
+        updateConnectionStatus('connecting', 'Connecting to agent...');
         
-        // WebSocket opened successfully
-        retellWebSocket.onopen = () => {
-            console.log('WebSocket connection established');
-            
-            // Send agent ID to backend for session initiation
-            retellWebSocket.send(JSON.stringify({
-                type: 'init',
-                agentId: AGENT_ID
-            }));
-            
-            // Update UI to "Connected" state
-            updateConnectionStatus('connected', 'Connected');
+        const response = await fetch('/.netlify/functions/create-retell-call', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create call session');
+        }
+        
+        const { accessToken } = await response.json();
+        
+        // Initialize Retell Web Client
+        retellWebClient = new RetellWebClient();
+        
+        // Set up event listeners for the call
+        retellWebClient.on('call_started', () => {
+            console.log('Call started');
+            isCallActive = true;
+            updateConnectionStatus('connected', 'Connected - Listening');
             connectRetellBtn.textContent = 'Disconnect';
             connectRetellBtn.disabled = false;
-            micIcon.classList.add('active'); // Start pulse animation
-            transcriptArea.classList.remove('hidden'); // Show transcript area
-            
-            // Add initial system message to transcript
-            addTranscriptMessage('agent', 'AI Agent connected. How can I assist you with 5 Star Imports today?');
-        };
+            micIcon.classList.add('active');
+            transcriptArea.classList.remove('hidden');
+            addTranscriptMessage('agent', 'Hello! I\'m the 5 Star Imports AI assistant. How can I help you today?');
+        });
         
-        // Handle incoming messages from WebSocket
-        retellWebSocket.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-            handleRetellMessage(message);
-        };
-        
-        // Handle WebSocket errors
-        retellWebSocket.onerror = (error) => {
-            console.error('WebSocket error:', error);
-            alert('Connection error. Please check your backend configuration.');
+        retellWebClient.on('call_ended', () => {
+            console.log('Call ended');
             disconnectRetellAgent();
-        };
+        });
         
-        // Handle WebSocket closure
-        retellWebSocket.onclose = () => {
-            console.log('WebSocket connection closed');
+        retellWebClient.on('agent_start_talking', () => {
+            console.log('Agent started talking');
+            updateConnectionStatus('connected', 'Agent speaking...');
+        });
+        
+        retellWebClient.on('agent_stop_talking', () => {
+            console.log('Agent stopped talking');
+            updateConnectionStatus('connected', 'Connected - Listening');
+        });
+        
+        retellWebClient.on('update', (update) => {
+            // Handle transcript updates
+            if (update.transcript) {
+                const transcriptArray = update.transcript;
+                // Clear existing transcript and rebuild
+                transcript.innerHTML = '';
+                transcriptArray.forEach(item => {
+                    addTranscriptMessage(item.role === 'agent' ? 'agent' : 'user', item.content);
+                });
+            }
+        });
+        
+        retellWebClient.on('error', (error) => {
+            console.error('Retell error:', error);
+            alert('Voice agent error: ' + error.message);
             disconnectRetellAgent();
-        };
+        });
+        
+        // Start the call with the access token
+        await retellWebClient.startCall({
+            accessToken: accessToken
+        });
         
     } catch (error) {
         console.error('Error connecting to Retell agent:', error);
-        alert('Failed to connect to AI agent. Please check your configuration.');
+        alert('Failed to connect to AI agent: ' + error.message);
         updateConnectionStatus('disconnected', 'Disconnected');
         connectRetellBtn.textContent = 'Connect to AI Agent';
         connectRetellBtn.disabled = false;
+        isCallActive = false;
     }
 }
 
@@ -525,17 +543,18 @@ async function connectRetellAgent() {
  * Disconnect from the Retell AI voice agent
  */
 function disconnectRetellAgent() {
-    // Close WebSocket connection
-    if (retellWebSocket) {
-        retellWebSocket.close();
-        retellWebSocket = null;
+    // Stop the Retell call
+    if (retellWebClient) {
+        try {
+            retellWebClient.stopCall();
+        } catch (error) {
+            console.error('Error stopping call:', error);
+        }
+        retellWebClient = null;
     }
     
-    // Stop audio stream
-    if (audioStream) {
-        audioStream.getTracks().forEach(track => track.stop());
-        audioStream = null;
-    }
+    // Update state
+    isCallActive = false;
     
     // Update UI to "Disconnected" state
     updateConnectionStatus('disconnected', 'Disconnected');
@@ -560,34 +579,6 @@ function updateConnectionStatus(status, text) {
     statusText.textContent = text;
 }
 
-/**
- * Handle incoming messages from Retell WebSocket
- * @param {object} message - Message object from WebSocket
- */
-function handleRetellMessage(message) {
-    // Handle different message types
-    switch (message.type) {
-        case 'transcript':
-            // Add transcript to UI
-            const speaker = message.speaker === 'user' ? 'user' : 'agent';
-            addTranscriptMessage(speaker, message.text);
-            break;
-            
-        case 'agent_response':
-            // Add agent response to transcript
-            addTranscriptMessage('agent', message.text);
-            break;
-            
-        case 'error':
-            // Handle error
-            console.error('Retell error:', message.error);
-            addTranscriptMessage('agent', '[Error: Unable to process request]');
-            break;
-            
-        default:
-            console.log('Unhandled message type:', message.type);
-    }
-}
 
 /**
  * Add a message to the conversation transcript
@@ -619,31 +610,6 @@ function addTranscriptMessage(speaker, text) {
     transcript.scrollTop = transcript.scrollHeight;
 }
 
-// ===================================
-// SIMULATED DEMO DATA (for demonstration purposes)
-// This simulates a conversation when WebSocket is not configured
-// ===================================
-
-/**
- * Simulate a demo conversation for demonstration purposes
- * This is only for showcasing the UI when backend is not configured
- */
-function simulateDemoConversation() {
-    // Simulated conversation messages
-    const demoMessages = [
-        { speaker: 'user', text: 'Do you have any 2022 BMW M4 models in stock?', delay: 2000 },
-        { speaker: 'agent', text: 'Yes! We have two 2022 BMW M4 Competition models available. One in Brooklyn Grey and one in Sao Paulo Yellow. Both have under 15,000 miles. Would you like more details?', delay: 4000 },
-        { speaker: 'user', text: 'What\'s the price for the grey one?', delay: 7000 },
-        { speaker: 'agent', text: 'The 2022 BMW M4 Competition in Brooklyn Grey is priced at $74,995. It features the carbon fiber interior package and has a clean history report. I can schedule a test drive or send you detailed photos. Which would you prefer?', delay: 9500 }
-    ];
-    
-    // Add each message with a delay
-    demoMessages.forEach(msg => {
-        setTimeout(() => {
-            addTranscriptMessage(msg.speaker, msg.text);
-        }, msg.delay);
-    });
-}
 
 // ===================================
 // SMOOTH SCROLL ENHANCEMENT
