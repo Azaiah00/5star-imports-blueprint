@@ -1,0 +1,446 @@
+/* ===================================
+   5 STAR IMPORTS - CUSTOM STYLES
+   Strategic Blueprint Styling
+   =================================== */
+
+/* Import Inter font family from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ===================================
+   CSS CUSTOM PROPERTIES (BRAND COLORS)
+   These match the exact HEX codes from the 5 Star Imports logo
+   =================================== */
+:root {
+    /* Primary brand colors from logo */
+    --brand-red: #CC0000;          /* Red accent from "5" and swoosh */
+    --brand-black: #1A1A1A;        /* Black from logo text */
+    --brand-white: #FFFFFF;        /* Clean white backgrounds */
+    
+    /* Gray scale for subtle elements */
+    --light-gray: #F9F9F9;         /* Subtle section backgrounds */
+    --medium-gray: #E0E0E0;        /* Borders and subtle accents */
+    --dark-gray: #6B7280;          /* Secondary text */
+    --very-dark-gray: #333333;     /* Primary text, darker elements */
+    --darker-gray: #2D3748;        /* Demo backgrounds */
+    --near-black: #1F2937;         /* Near-black elements */
+}
+
+/* ===================================
+   GLOBAL STYLES
+   =================================== */
+
+/* Apply Inter font globally */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Smooth scrolling for anchor links */
+html {
+    scroll-behavior: smooth;
+}
+
+/* ===================================
+   UTILITY CLASSES USING BRAND COLORS
+   (Extending Tailwind with custom brand colors)
+   =================================== */
+
+.bg-brand-red {
+    background-color: var(--brand-red);
+}
+
+.bg-brand-black {
+    background-color: var(--brand-black);
+}
+
+.bg-light-gray {
+    background-color: var(--light-gray);
+}
+
+.bg-medium-gray {
+    background-color: var(--medium-gray);
+}
+
+.bg-dark-gray {
+    background-color: var(--dark-gray);
+}
+
+.bg-very-dark-gray {
+    background-color: var(--very-dark-gray);
+}
+
+.bg-darker-gray {
+    background-color: var(--darker-gray);
+}
+
+.text-brand-red {
+    color: var(--brand-red);
+}
+
+.text-brand-black {
+    color: var(--brand-black);
+}
+
+.text-dark-gray {
+    color: var(--dark-gray);
+}
+
+.border-brand-red {
+    border-color: var(--brand-red);
+}
+
+.border-medium-gray {
+    border-color: var(--medium-gray);
+}
+
+/* ===================================
+   NAVIGATION STYLES
+   =================================== */
+
+/* Navigation link hover effect */
+.nav-link {
+    color: var(--medium-gray);
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--brand-red);
+}
+
+/* ===================================
+   SECTION TITLE STYLES
+   =================================== */
+
+.section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--very-dark-gray);
+    margin-bottom: 1rem;
+}
+
+/* Responsive section title for mobile */
+@media (max-width: 768px) {
+    .section-title {
+        font-size: 2rem;
+    }
+}
+
+/* ===================================
+   HERO SECTION STYLES
+   =================================== */
+
+.hero-section {
+    background: linear-gradient(135deg, var(--brand-black) 0%, var(--very-dark-gray) 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle overlay effect on hero */
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(204, 0, 0, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+/* ===================================
+   CARD HOVER EFFECTS
+   =================================== */
+
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* ===================================
+   TAB NAVIGATION STYLES
+   =================================== */
+
+/* Tab button base styles */
+.tab-btn {
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    color: var(--dark-gray);
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Tab button hover state */
+.tab-btn:hover {
+    color: var(--brand-red);
+}
+
+/* Active tab button state */
+.tab-btn.active {
+    color: var(--brand-red);
+    border-bottom-color: var(--brand-red);
+}
+
+/* Responsive tab buttons for mobile */
+@media (max-width: 768px) {
+    .tab-btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+    }
+}
+
+/* ===================================
+   TAB CONTENT PANEL STYLES
+   =================================== */
+
+/* Hide inactive tab content */
+.tab-content {
+    display: none;
+    animation: fadeIn 0.5s ease;
+}
+
+/* Show active tab content */
+.tab-content.active {
+    display: block;
+}
+
+/* Fade-in animation for tab content */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===================================
+   CHART CONTAINER STYLES
+   =================================== */
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Responsive chart height for mobile */
+@media (max-width: 768px) {
+    .chart-container {
+        height: 250px;
+    }
+}
+
+/* ===================================
+   RETELL AI MICROPHONE PULSE ANIMATION
+   This creates the visual "active listening" effect
+   =================================== */
+
+/* Microphone icon active state */
+#micIcon.active {
+    background-color: var(--brand-red);
+    animation: micPulse 2s infinite;
+}
+
+/* Microphone icon active SVG color */
+#micIcon.active svg {
+    color: white;
+}
+
+/* Pulse animation keyframes */
+@keyframes micPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(204, 0, 0, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 20px rgba(204, 0, 0, 0);
+    }
+}
+
+/* ===================================
+   CONNECTION STATUS STYLES
+   =================================== */
+
+/* Status dot colors based on connection state */
+.status-connected #statusDot {
+    background-color: #10B981; /* Green for connected */
+    animation: statusPulse 2s infinite;
+}
+
+.status-connecting #statusDot {
+    background-color: #F59E0B; /* Orange for connecting */
+    animation: statusPulse 1s infinite;
+}
+
+.status-disconnected #statusDot {
+    background-color: #6B7280; /* Gray for disconnected */
+}
+
+/* Status pulse animation */
+@keyframes statusPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* ===================================
+   TRANSCRIPT STYLES
+   =================================== */
+
+/* Individual transcript message styling */
+.transcript-message {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+/* User message (customer) */
+.transcript-message.user {
+    background-color: rgba(204, 0, 0, 0.1);
+    border-left: 3px solid var(--brand-red);
+}
+
+/* Agent message (AI) */
+.transcript-message.agent {
+    background-color: rgba(107, 114, 128, 0.1);
+    border-left: 3px solid var(--dark-gray);
+}
+
+/* Message label (User: / Agent:) */
+.transcript-message .message-label {
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+/* User label color */
+.transcript-message.user .message-label {
+    color: var(--brand-red);
+}
+
+/* Agent label color */
+.transcript-message.agent .message-label {
+    color: var(--dark-gray);
+}
+
+/* ===================================
+   LOADING SPINNER STYLES
+   =================================== */
+
+/* Ensure spinner is visible when shown */
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===================================
+   BUTTON HOVER EFFECTS
+   =================================== */
+
+/* Smooth button transitions */
+button {
+    transition: all 0.3s ease;
+}
+
+/* Button disabled state */
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ===================================
+   SCROLLBAR STYLING (for transcript area)
+   =================================== */
+
+/* Custom scrollbar for webkit browsers */
+#transcript::-webkit-scrollbar {
+    width: 8px;
+}
+
+#transcript::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+#transcript::-webkit-scrollbar-thumb {
+    background: var(--dark-gray);
+    border-radius: 4px;
+}
+
+#transcript::-webkit-scrollbar-thumb:hover {
+    background: var(--brand-red);
+}
+
+/* ===================================
+   ACCESSIBILITY ENHANCEMENTS
+   =================================== */
+
+/* Focus states for keyboard navigation */
+a:focus,
+button:focus,
+input:focus,
+textarea:focus {
+    outline: 2px solid var(--brand-red);
+    outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ===================================
+   RESPONSIVE UTILITIES
+   =================================== */
+
+/* Ensure images are responsive */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Container max-width for very large screens */
+@media (min-width: 1536px) {
+    .container {
+        max-width: 1400px;
+    }
+}
+
+/* ===================================
+   CODE TAG STYLING (for technical notes)
+   =================================== */
+
+code {
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+    font-family: 'Courier New', Courier, monospace;
+}
+

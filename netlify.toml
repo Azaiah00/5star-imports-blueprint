@@ -1,0 +1,21 @@
+# Netlify Configuration File
+# This tells Netlify how to build and deploy your site
+
+[build]
+  # The directory where your built site files are located
+  publish = "."
+  
+  # Directory for serverless functions
+  functions = "netlify/functions"
+
+# Environment variables are set in Netlify dashboard
+# Go to: Site settings > Environment variables
+# Add: OPENAI_API_KEY = your_actual_key_here
+
+# Redirect rules (optional - for clean URLs)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false
+
